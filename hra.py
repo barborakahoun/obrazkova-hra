@@ -25,6 +25,7 @@ EXPLODE_SPEED = 3   ## rychlost animace odstranění obrázku
 ## jména souborů
 IMG_PATH = 'assets/animal-pack/PNG/Square without details/{}.png'
 ACTIVE_PATH = 'assets/animal-pack/PNG/Square (outline)/{}.png'
+GREY_PATH = 'assets/animal-pack/PNG/sedy.png'
 
 ## seznam zvířátek: tohle je seznam dvojic (n-tic), ve kterých je vždy jméno
 ## zvířátka a číslo, které říká kde je střed obrázku: když zvíře velké zuby
@@ -82,6 +83,7 @@ active_pictures = [image_load(ACTIVE_PATH.format(name), offset)
 active_bg_img = image_load('assets/puzzle-pack-2/PNG/Tiles grey/tileGrey_01.png')
 ## A na pozadí rovnou vytvoříme i sprite – objekt, který můžeme vykreslit.
 bg_sprite = pyglet.sprite.Sprite(active_bg_img)
+grey_square = image_load(GREY_PATH)
 
 
 ## Mimochodem, obrázky jsou stažené z těchto zdrojů, a jsou k dispozici
@@ -225,7 +227,7 @@ class Tile:
         ## Každé políčko má k dispozici dva "sprity" – obrázky, které
         ## se dají vykreslovat na danou pozici. Jeden s normálním obrázkem,
         ## jeden pro políčko které je zrovna pod myší.
-        self.sprite = pyglet.sprite.Sprite(pictures[self.value])
+        self.sprite = pyglet.sprite.Sprite(grey_square)
         self.active_sprite = pyglet.sprite.Sprite(active_pictures[self.value])
 
     def draw(self, x, y, window, selected=False):
@@ -287,6 +289,7 @@ class Tile:
 class Board:
     """Šachovnice s herní logikou"""
     def __init__(self):
+        self.show = []
         ## Inicializace: Vytvoříme seznam seznamů s objekty Tile.
         ## Bude to seznam sloupců šachovnice, kde každý sloupec je seznam
         ## jednotlivých políček.
@@ -356,7 +359,10 @@ class Board:
             ## už dané políčko.
             for y, tile in enumerate(column):
                 ## Políčko stačí vykreslit.
-                tile.draw(x, y, window)
+                if (x, y) in self.show:
+                    tile.draw(x, y, window, selected=True)
+                else:
+                    tile.draw(x, y, window, selected=False)
 
         ## Teď vykreslíme políčko pod kurzorem ještě jednou, s "aktivním"
         ## obrázkem.
@@ -364,12 +370,12 @@ class Board:
         ## Kdyby to tak nebylo, museli bychom v cyklu výše políčko pod kurzorem
         ## vynechat.)
         ## V last_mouse_pos máme logické souřadnice myši:
-        x, y = self.last_mouse_pos
+        #x, y = self.last_mouse_pos
         ## Zkontrolujeme že myš je v šachovnici, a ne venku:
-        if 0 <= x < COLUMNS and 0 <= y < ROWS:
+        #if 0 <= x < COLUMNS and 0 <= y < ROWS:
             ## A pak vezmeme políčko a vykreslíme ho:
-            tile = self.content[x][y]
-            tile.draw(x, y, window, True)
+            #tile = self.content[x][y]
+            #tile.draw(x, y, window, True)
 
         ## A nakonec vykreslíme "políčka navíc" z extra_tiles:
         for x, y, tile in self.extra_tiles:

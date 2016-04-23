@@ -289,12 +289,14 @@ class Tile:
 class Board:
     """Šachovnice s herní logikou"""
     def __init__(self):
-        self.show = []
+        self.show = set()
+        self.done = set()
         ## Inicializace: Vytvoříme seznam seznamů s objekty Tile.
         ## Bude to seznam sloupců šachovnice, kde každý sloupec je seznam
         ## jednotlivých políček.
         self.content = [[Tile() for i in range(ROWS)]
                         for j in range(COLUMNS)]
+
         ## Zbytek je specifický pro tuhle hru: vybíráme políčka myší:
         ## Budeme si pamatovat poslední pozici myši, v logických souřadnicích
         ## t.j. nad kterým políčkem myš právě je.
@@ -391,40 +393,33 @@ class Board:
             return
         ## Vezměme políčko, na které hráč kliknul
         current_tile = self.content[x][y]
+
         ## Pokud se tohle políčko právě animuje (padá, nebo se vyměňuje
         ## s jiným), tak kliknutí budeme ignorovat.
-        if current_tile.animation:
-            return
+        #if current_tile.animation:
+            #return
         ## Co uděláme dál závisí na tom, jestli už je něco vybrané.
         ## A je to specifické pro tuhle hru.
-        if self.selected_tile is None:
-            ## Když není vybrané nic, tak dané políčko prostě vybereme.
-            self.selected_tile = x, y
-        elif self.selected_tile == (x, y):
-            ## Když je vybrané stejné políčko na jaké hráč kliknul,
-            ## tak výběr zrušíme.
-            self.selected_tile = None
-        else:
-            ## Jinak kliknuté a vybrané políčka vyměníme.
-            ## Na to budeme potřebovat souřadnice toho druhého políčka:
-            other_x, other_y = self.selected_tile
-            ## Samotná výměna:
-            self.content[x][y], self.content[other_x][other_y] = (
-                self.content[other_x][other_y], self.content[x][y])
-            ## Zbytek je nastavení animace.
-            ## Když vyměňujeme políčka dál od sebe, animace by měla trvat
-            ## trochu déle než když jsou těsně vedle sebe.
-            ## Tohle není žádný exaktní vzorec – čísla jsou vybrána od oka,
-            ## aby to vypadalo hezky.
-            duration = ((x - other_x)**2 + (y - other_y)**2) ** 0.2
-            ## Když máme dobu trvání animace, tak vyměněným políčkům
-            ## přiřadíme nové animační objekty.
-            self.content[x][y].animation = MoveAnimation(
-                other_x, other_y, duration)
-            self.content[other_x][other_y].animation = MoveAnimation(
-                x, y, duration)
-            ## A nakonec zrušíme výběr.
-            self.selected_tile = None
+
+        if len(self.show) == 1:
+            self.show.add((x,y))
+        elif len(self.show) == 2:
+            x1,y1=self.show.pop()
+            x2,y2=self.show.pop()
+            tile1=self.content[x1][y1]
+            tile2=self.content[x2][y2]
+
+            if tile1.value==tile2.value:
+                self.done.add((x1,y1))
+                self.done.add((x2,y2))
+
+        if len(self.show) == 0:
+            self.show.add((x,y))
+
+
+
+
+
 
     def update(self, t):
         """Posune animace v celé hře o "t" sekund"""

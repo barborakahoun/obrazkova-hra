@@ -26,6 +26,7 @@ EXPLODE_SPEED = 3   ## rychlost animace odstranění obrázku
 IMG_PATH = 'assets/animal-pack/PNG/Square without details/{}.png'
 ACTIVE_PATH = 'assets/animal-pack/PNG/Square (outline)/{}.png'
 GREY_PATH = 'assets/animal-pack/PNG/sedy.png'
+BLACK_PATH = 'assets/animal-pack/PNG/black.png'
 
 ## seznam zvířátek: tohle je seznam dvojic (n-tic), ve kterých je vždy jméno
 ## zvířátka a číslo, které říká kde je střed obrázku: když zvíře velké zuby
@@ -84,6 +85,7 @@ active_bg_img = image_load('assets/puzzle-pack-2/PNG/Tiles grey/tileGrey_01.png'
 ## A na pozadí rovnou vytvoříme i sprite – objekt, který můžeme vykreslit.
 bg_sprite = pyglet.sprite.Sprite(active_bg_img)
 grey_square = image_load(GREY_PATH)
+black_square = image_load(BLACK_PATH)
 
 
 ## Mimochodem, obrázky jsou stažené z těchto zdrojů, a jsou k dispozici
@@ -229,8 +231,9 @@ class Tile:
         ## jeden pro políčko které je zrovna pod myší.
         self.sprite = pyglet.sprite.Sprite(grey_square)
         self.active_sprite = pyglet.sprite.Sprite(active_pictures[self.value])
+        self.sprite_done = pyglet.sprite.Sprite(black_square)
 
-    def draw(self, x, y, window, selected=False):
+    def draw(self, x, y, window, selected=False, done=False):
         """Vykreslí tohle políčko na obrazovku, na dané souřadnici
 
         Argumenty: x, y jsou souřadnice; window je okno do kterého kreslíme,
@@ -239,6 +242,8 @@ class Tile:
         ## Nejdřív vybereme obrázek (sprite), který budeme používat
         if selected:
             sprite = self.active_sprite
+        elif done:
+            sprite = self.sprite_done
         else:
             sprite = self.sprite
         ## Nastavíme pozici spritu podle toho, kam máme kreslit.
@@ -289,6 +294,7 @@ class Tile:
 class Board:
     """Šachovnice s herní logikou"""
     def __init__(self):
+
         self.show = set()
         self.done = set()
         ## Inicializace: Vytvoříme seznam seznamů s objekty Tile.
@@ -363,8 +369,11 @@ class Board:
                 ## Políčko stačí vykreslit.
                 if (x, y) in self.show:
                     tile.draw(x, y, window, selected=True)
+                elif (x,y) in self.done:
+                    tile.draw(x, y, window, done=True)
                 else:
                     tile.draw(x, y, window, selected=False)
+
 
         ## Teď vykreslíme políčko pod kurzorem ještě jednou, s "aktivním"
         ## obrázkem.
@@ -401,20 +410,23 @@ class Board:
         ## Co uděláme dál závisí na tom, jestli už je něco vybrané.
         ## A je to specifické pro tuhle hru.
 
-        if len(self.show) == 1:
-            self.show.add((x,y))
-        elif len(self.show) == 2:
+
+
+
+        if len(self.show) == 2:
             x1,y1=self.show.pop()
             x2,y2=self.show.pop()
             tile1=self.content[x1][y1]
             tile2=self.content[x2][y2]
 
+
             if tile1.value==tile2.value:
                 self.done.add((x1,y1))
                 self.done.add((x2,y2))
 
-        if len(self.show) == 0:
-            self.show.add((x,y))
+        if len(self.show) in (0,1):
+            if (x, y) not in self.done:
+                self.show.add((x,y))
 
 
 

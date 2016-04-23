@@ -233,6 +233,8 @@ class Tile:
         self.active_sprite = pyglet.sprite.Sprite(active_pictures[self.value])
         self.sprite_done = pyglet.sprite.Sprite(black_square)
 
+
+
     def draw(self, x, y, window, selected=False, done=False):
         """Vykreslí tohle políčko na obrazovku, na dané souřadnici
 
@@ -246,6 +248,8 @@ class Tile:
             sprite = self.sprite_done
         else:
             sprite = self.sprite
+
+        sprite.rotation=0
         ## Nastavíme pozici spritu podle toho, kam máme kreslit.
         screen_x, screen_y = logical_to_screen(x, y, window)
         sprite.x = screen_x
@@ -276,6 +280,8 @@ class Board:
     """Šachovnice s herní logikou"""
     def __init__(self):
         self.turn_number = 0
+        self.player_number = 0
+        self.score = [0, 0]
         self.show = set()
         self.done = set()
         self.last_mouse_pos = (-1,-1)
@@ -304,9 +310,13 @@ class Board:
         x, y = logical_to_screen(logical_x, logical_y, window)
         bg_sprite.x = x
         bg_sprite.y = y
-        bg_sprite.color = 162, 201, 0
-        bg_sprite.draw()
 
+        if self.player_number == 0:
+            bg_sprite.color = 162, 201, 0
+            bg_sprite.draw()
+        else:
+            bg_sprite.color = 255, 186, 0
+            bg_sprite.draw()
 
 
         ## Teď projdeme celou šachovnici, a vykreslíme všechna políčka na ní.
@@ -338,7 +348,7 @@ class Board:
         if not (0 <= x < COLUMNS and 0 <= y < ROWS):
             return
         ## Vezměme políčko, na které hráč kliknul
-        current_tile = self.content[x][y]
+        self.current_tile = self.content[x][y]
 
         ## Pokud se tohle políčko právě animuje (padá, nebo se vyměňuje
         ## s jiným), tak kliknutí budeme ignorovat.
@@ -352,12 +362,23 @@ class Board:
             x2,y2=self.show.pop()
             tile1=self.content[x1][y1]
             tile2=self.content[x2][y2]
-            self.turn_number += 1
-            print(self.turn_number)
+
 
             if tile1.value==tile2.value:
                 self.done.add((x1,y1))
                 self.done.add((x2,y2))
+                self.score[self.player_number] +=1
+
+        elif len(self.show) == 1:
+            x1,y1 = list(self.show)[0]
+            tile1 = self.content[x1][y1]
+
+            if tile1.value==self.current_tile.value:
+                self.turn_number += 2
+                self.player_number=self.turn_number%2
+            else:
+                self.turn_number += 1
+                self.player_number=self.turn_number%2
 
         if len(self.show) in (0,1):
             if (x, y) not in self.done:
